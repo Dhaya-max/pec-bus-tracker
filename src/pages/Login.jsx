@@ -17,7 +17,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
+      const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
         email, password, role
       })
       localStorage.setItem('token', res.data.token)
@@ -39,9 +39,10 @@ export default function Login() {
       const decoded = jwtDecode(credentialResponse.credential)
       const { name, email } = decoded
 
+
       // Try to login first
       try {
-        const res = await axios.post('http://localhost:5000/api/auth/login', {
+        const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
           email, password: email, role
         })
         localStorage.setItem('token', res.data.token)
@@ -52,7 +53,7 @@ export default function Login() {
         else if (res.data.role === 'admin') navigate('/admin')
       } catch {
         // If not found, register automatically
-        await axios.post('http://localhost:5000/api/auth/register', {
+        await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/register', {
           name, email, password: email, role
         })
         const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
