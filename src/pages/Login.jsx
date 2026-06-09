@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { GoogleLogin } from '@react-oauth/google'
 import { jwtDecode } from 'jwt-decode'
+import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const [role, setRole] = useState('student')
@@ -11,6 +12,9 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
+
+  const redirectByRole = (role) => navigate(`/${role}`)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -20,13 +24,8 @@ export default function Login() {
       const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
         email, password, role
       })
-      localStorage.setItem('token', res.data.token)
-      localStorage.setItem('role', res.data.role)
-      localStorage.setItem('name', res.data.name)
-
-      if (res.data.role === 'student') navigate('/student')
-      else if (res.data.role === 'driver') navigate('/driver')
-      else if (res.data.role === 'admin') navigate('/admin')
+      login(res.data.token, res.data.role, res.data.name)
+      redirectByRole(res.data.role)
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.')
     } finally {
@@ -39,32 +38,21 @@ export default function Login() {
       const decoded = jwtDecode(credentialResponse.credential)
       const { name, email } = decoded
 
-
-      // Try to login first
       try {
         const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
           email, password: email, role
         })
-        localStorage.setItem('token', res.data.token)
-        localStorage.setItem('role', res.data.role)
-        localStorage.setItem('name', res.data.name)
-        if (res.data.role === 'student') navigate('/student')
-        else if (res.data.role === 'driver') navigate('/driver')
-        else if (res.data.role === 'admin') navigate('/admin')
+        login(res.data.token, res.data.role, res.data.name)
+        redirectByRole(res.data.role)
       } catch {
-        // If not found, register automatically
         await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/register', {
           name, email, password: email, role
         })
         const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
           email, password: email, role
         })
-        localStorage.setItem('token', res.data.token)
-        localStorage.setItem('role', res.data.role)
-        localStorage.setItem('name', res.data.name)
-        if (res.data.role === 'student') navigate('/student')
-        else if (res.data.role === 'driver') navigate('/driver')
-        else if (res.data.role === 'admin') navigate('/admin')
+        login(res.data.token, res.data.role, res.data.name)
+        redirectByRole(res.data.role)
       }
     } catch (err) {
       setError('Google login failed. Please try again.')
@@ -83,7 +71,6 @@ export default function Login() {
           <p className="text-gray-500 text-sm mt-1">Panimalar Engineering College</p>
         </div>
 
-        {/* Role selector */}
         <div className="flex rounded-lg overflow-hidden border border-gray-200 mb-6">
           {['student', 'driver', 'admin'].map((r) => (
             <button
@@ -136,14 +123,12 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px bg-gray-200"></div>
           <span className="text-sm text-gray-400">or</span>
           <div className="flex-1 h-px bg-gray-200"></div>
         </div>
 
-        {/* Google Sign In */}
         <div className="flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
