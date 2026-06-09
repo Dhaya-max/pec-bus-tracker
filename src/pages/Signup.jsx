@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
+import { GoogleLogin } from '@react-oauth/google'
+import { jwtDecode } from 'jwt-decode'
+import { useAuth } from '../context/AuthContext'
 
 export default function Signup() {
   const [role, setRole] = useState('student')
@@ -11,20 +14,13 @@ export default function Signup() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleSignup = async (e) => {
     e.preventDefault()
     setError('')
-
-    if (password !== confirm) {
-      setError('Passwords do not match!')
-      return
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters!')
-      return
-    }
-
+    if (password !== confirm) return setError('Passwords do not match!')
+    if (password.length < 6) return setError('Password must be at least 6 characters!')
     setLoading(true)
     try {
       await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/register', {
@@ -35,6 +31,31 @@ export default function Signup() {
       setError(err.response?.data?.error || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential)
+      const { name, email } = decoded
+      try {
+        const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
+          email, password: email, role
+        })
+        login(res.data.token, res.data.role, res.data.name)
+        navigate(`/${res.data.role}`)
+      } catch {
+        await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/register', {
+          name, email, password: email, role
+        })
+        const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
+          email, password: email, role
+        })
+        login(res.data.token, res.data.role, res.data.name)
+        navigate(`/${res.data.role}`)
+      }
+    } catch (err) {
+      setError('Google signup failed. Please try again.')
     }
   }
 
@@ -50,7 +71,6 @@ export default function Signup() {
           <p className="text-gray-500 text-sm mt-1">Panimalar Engineering College</p>
         </div>
 
-        {/* Role selector */}
         <div className="flex rounded-lg overflow-hidden border border-gray-200 mb-6">
           {['student', 'driver', 'admin'].map((r) => (
             <button
@@ -124,6 +144,23 @@ export default function Signup() {
             {loading ? 'Creating account...' : `Sign Up as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-sm text-gray-400">or</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google signup failed.')}
+            width="100%"
+            text="signup_with"
+            shape="rectangular"
+            theme="outline"
+          />
+        </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Already have an account?{' '}
