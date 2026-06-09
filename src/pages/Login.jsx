@@ -38,6 +38,7 @@ export default function Login() {
       const decoded = jwtDecode(credentialResponse.credential)
       const { name, email } = decoded
 
+      // Try to login first
       try {
         const res = await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/login', {
           email, password: email, role
@@ -45,6 +46,7 @@ export default function Login() {
         login(res.data.token, res.data.role, res.data.name)
         redirectByRole(res.data.role)
       } catch {
+        // If not found, register then login
         await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/auth/register', {
           name, email, password: email, role
         })
@@ -71,6 +73,7 @@ export default function Login() {
           <p className="text-gray-500 text-sm mt-1">Panimalar Engineering College</p>
         </div>
 
+        {/* Role selector */}
         <div className="flex rounded-lg overflow-hidden border border-gray-200 mb-6">
           {['student', 'driver', 'admin'].map((r) => (
             <button
@@ -123,12 +126,14 @@ export default function Login() {
           </button>
         </form>
 
+        {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px bg-gray-200"></div>
           <span className="text-sm text-gray-400">or</span>
           <div className="flex-1 h-px bg-gray-200"></div>
         </div>
 
+        {/* Google Sign In */}
         <div className="flex justify-center">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
