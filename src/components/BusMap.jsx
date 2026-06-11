@@ -20,6 +20,18 @@ export default function BusMap({ busLocations = [] }) {
           <Marker
             key={i}
             position={{ lat: loc.lat, lng: loc.lng }}
+            icon={{
+              url: 'https://img.icons8.com/color/48/bus.png',
+              scaledSize: new window.google.maps.Size(40, 40),
+              anchor: new window.google.maps.Point(20, 20),
+              labelOrigin: new window.google.maps.Point(20, 48)
+            }}
+            label={{
+              text: loc.busNumber || 'Bus',
+              color: '#1E3A5F',
+              fontWeight: 'bold',
+              fontSize: '11px'
+            }}
             title={loc.busNumber}
           />
         ))}

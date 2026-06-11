@@ -64,9 +64,7 @@ export default function Signup() {
       <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8">
 
         <div className="text-center mb-8">
-          <div className="bg-[#1E3A5F] text-white w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
-            🚌
-          </div>
+         <img src="/pnm.jpg" alt="PEC Logo" className="w-14 h-14 rounded-full mx-auto mb-3 object-cover" />
           <h1 className="text-2xl font-bold text-[#1E3A5F]">Create Account</h1>
           <p className="text-gray-500 text-sm mt-1">Panimalar Engineering College</p>
         </div>

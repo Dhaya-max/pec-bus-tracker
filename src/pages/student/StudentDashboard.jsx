@@ -70,7 +70,8 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-[#EFF6FF]">
       <nav className="bg-[#1E3A5F] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🚌</span>
+        // Replace: <span className="text-2xl">🚌</span>
+<img src="/pnm.jpg" alt="PEC" className="w-10 h-10 rounded-full object-cover" />
           <div>
             <h1 className="font-bold text-lg leading-tight">PEC Bus Tracker</h1>
             <p className="text-xs text-blue-200">Student Portal</p>
