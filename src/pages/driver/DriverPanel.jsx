@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
+import axios from 'axios'
 
-const stops = ['Koyambedu', 'CMBT', 'Poonamallee', 'Porur', 'Vadapalani', 'Ashok Nagar', 'College Gate']
 const statuses = ['On Time', 'Delayed', 'Breakdown']
 
 export default function DriverPanel() {
-  const [currentStop, setCurrentStop] = useState('Koyambedu')
+  const [bus, setBus] = useState(null)
+  const [currentStop, setCurrentStop] = useState('')
   const [busStatus, setBusStatus] = useState('On Time')
   const [message, setMessage] = useState('')
   const [saved, setSaved] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [locationStatus, setLocationStatus] = useState('')
-  const { logout, name } = useAuth()
+  const [loadingBus, setLoadingBus] = useState(true)
+  const { logout, name, token } = useAuth()
   const { socket } = useSocket()
 
   const statusColor = {
@@ -21,35 +23,56 @@ export default function DriverPanel() {
     'Breakdown': 'bg-red-100 text-red-800 border-red-200',
   }
 
-  const handleUpdate = () => {
+  useEffect(() => {
+    const fetchMyBus = async () => {
+      try {
+        const res = await axios.get('https://pec-bus-tracker-server-production.up.railway.app/api/bus/mybus', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setBus(res.data)
+        setCurrentStop(res.data.currentStop)
+        setBusStatus(res.data.status)
+      } catch (err) {
+        console.error('No bus assigned', err)
+      } finally {
+        setLoadingBus(false)
+      }
+    }
+    fetchMyBus()
+  }, [token])
+
+  const handleUpdate = async () => {
+    if (!bus) return
     const update = {
-      busId: 'bus-01',
-      busNumber: 'Bus 01',
-      route: 'Poonamallee',
+      busId: bus.busId,
+      busNumber: bus.busNumber,
+      route: bus.route,
       currentStop,
       status: busStatus,
       message,
       updatedAt: new Date().toISOString()
     }
     if (socket) socket.emit('driver:update', update)
+    try {
+      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    } catch (err) {
+      console.error('Failed to update status', err)
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
 
   const handleShareLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationStatus('Geolocation not supported.')
-      return
-    }
-
+    if (!navigator.geolocation || !bus) return
     setSharing(true)
     setLocationStatus('Sharing location...')
-
     navigator.geolocation.watchPosition(
       (pos) => {
         const locationData = {
-          busNumber: 'Bus 01',
-          busId: 'bus-01',
+          busNumber: bus.busNumber,
+          busId: bus.busId,
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           updatedAt: new Date().toISOString()
@@ -57,7 +80,7 @@ export default function DriverPanel() {
         if (socket) socket.emit('driver:location', locationData)
         setLocationStatus('✅ Location shared live')
       },
-      (err) => {
+      () => {
         setLocationStatus('❌ Location access denied.')
         setSharing(false)
       },
@@ -69,6 +92,20 @@ export default function DriverPanel() {
     setSharing(false)
     setLocationStatus('Location sharing stopped.')
   }
+
+  if (loadingBus) return (
+    <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center">
+      <p className="text-gray-400">Loading your bus info...</p>
+    </div>
+  )
+
+  if (!bus) return (
+    <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center">
+      <p className="text-red-400">No bus assigned to you. Contact admin.</p>
+    </div>
+  )
+
+  const stops = ['Koyambedu', 'CMBT', 'Poonamallee', 'Porur', 'Vadapalani', 'Ashok Nagar', 'College Gate']
 
   return (
     <div className="min-h-screen bg-[#EFF6FF]">
@@ -94,21 +131,13 @@ export default function DriverPanel() {
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">📍 Live Location</h2>
           <p className="text-sm text-gray-500 mb-3">Share your real-time GPS location with students and admin.</p>
-          {locationStatus && (
-            <p className="text-sm mb-3 text-gray-600">{locationStatus}</p>
-          )}
+          {locationStatus && <p className="text-sm mb-3 text-gray-600">{locationStatus}</p>}
           {!sharing ? (
-            <button
-              onClick={handleShareLocation}
-              className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
+            <button onClick={handleShareLocation} className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors">
               Start Sharing Location
             </button>
           ) : (
-            <button
-              onClick={handleStopSharing}
-              className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors"
-            >
+            <button onClick={handleStopSharing} className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors">
               Stop Sharing Location
             </button>
           )}
@@ -119,10 +148,10 @@ export default function DriverPanel() {
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-4">My Bus Info</h2>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: 'Bus Number', value: 'Bus 01' },
-              { label: 'Route', value: 'Poonamallee' },
+              { label: 'Bus Number', value: bus.busNumber },
+              { label: 'Route', value: bus.route },
               { label: 'Departure', value: '8:00 AM' },
-              { label: 'Capacity', value: '52 seats' },
+              { label: 'Capacity', value: `${bus.capacity} seats` },
             ].map(i => (
               <div key={i.label} className="bg-[#EFF6FF] rounded-lg p-3">
                 <p className="text-xs text-gray-500">{i.label}</p>
