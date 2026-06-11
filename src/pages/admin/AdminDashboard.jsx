@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
+import BusMap from '../../components/BusMap'
 
 const initialBuses = [
   { id: 1, number: 'Bus 01', route: 'Poonamallee', driver: 'Ravi Kumar', capacity: 52, status: 'Active' },
@@ -15,7 +16,8 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState('buses')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ number: '', route: '', driver: '', capacity: '' })
-  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { busLocations } = useSocket()
 
   const handleAdd = () => {
     if (!form.number || !form.route || !form.driver) return
@@ -24,9 +26,7 @@ export default function AdminDashboard() {
     setShowForm(false)
   }
 
-  const handleDelete = (id) => {
-    setBuses(buses.filter(b => b.id !== id))
-  }
+  const handleDelete = (id) => setBuses(buses.filter(b => b.id !== id))
 
   const toggleStatus = (id) => {
     setBuses(buses.map(b => b.id === id
@@ -36,7 +36,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#EFF6FF]">
-      {/* Navbar */}
       <nav className="bg-[#1E3A5F] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🚌</span>
@@ -45,16 +44,12 @@ export default function AdminDashboard() {
             <p className="text-xs text-blue-200">Admin Dashboard</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/login')}
-          className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50"
-        >
+        <button onClick={logout} className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50">
           Logout
         </button>
       </nav>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
-
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
@@ -72,14 +67,14 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
-          {['buses', 'routes', 'schedule'].map(t => (
+          {['buses', 'routes', 'schedule', 'map'].map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors
                 ${tab === t ? 'bg-[#1E3A5F] text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'}`}
             >
-              {t}
+              {t === 'map' ? '📍 Live Map' : t}
             </button>
           ))}
         </div>
@@ -96,8 +91,6 @@ export default function AdminDashboard() {
                 + Add Bus
               </button>
             </div>
-
-            {/* Add Form */}
             {showForm && (
               <div className="bg-[#EFF6FF] rounded-lg p-4 mb-4 grid grid-cols-2 gap-3">
                 {[
@@ -122,8 +115,6 @@ export default function AdminDashboard() {
                 </button>
               </div>
             )}
-
-            {/* Bus Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -151,18 +142,8 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-3">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => toggleStatus(bus.id)}
-                            className="text-xs text-[#1E3A5F] border border-[#1E3A5F] px-2 py-1 rounded hover:bg-blue-50"
-                          >
-                            Toggle
-                          </button>
-                          <button
-                            onClick={() => handleDelete(bus.id)}
-                            className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
-                          >
-                            Delete
-                          </button>
+                          <button onClick={() => toggleStatus(bus.id)} className="text-xs text-[#1E3A5F] border border-[#1E3A5F] px-2 py-1 rounded hover:bg-blue-50">Toggle</button>
+                          <button onClick={() => handleDelete(bus.id)} className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50">Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -181,14 +162,10 @@ export default function AdminDashboard() {
               {['Poonamallee', 'Anna Nagar', 'Tambaram', 'Velachery', 'Porur', 'Avadi', 'Chromepet'].map((route, i) => (
                 <div key={route} className="flex items-center justify-between p-3 bg-[#EFF6FF] rounded-lg">
                   <div className="flex items-center gap-3">
-                    <span className="bg-[#1E3A5F] text-white text-xs w-7 h-7 rounded-full flex items-center justify-center font-bold">
-                      {i + 1}
-                    </span>
+                    <span className="bg-[#1E3A5F] text-white text-xs w-7 h-7 rounded-full flex items-center justify-center font-bold">{i + 1}</span>
                     <span className="font-medium text-[#1E3A5F]">{route}</span>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    {4 + i} stops · {20 + i * 3} km
-                  </span>
+                  <span className="text-xs text-gray-500">{4 + i} stops · {20 + i * 3} km</span>
                 </div>
               ))}
             </div>
@@ -213,6 +190,20 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Map Tab */}
+        {tab === 'map' && (
+          <div className="bg-white rounded-xl shadow-sm p-5">
+            <h2 className="font-bold text-[#1E3A5F] text-lg mb-3">📍 Live Bus Locations</h2>
+            {busLocations.length === 0 ? (
+              <div className="h-40 flex items-center justify-center text-gray-400 text-sm bg-[#EFF6FF] rounded-xl">
+                Waiting for driver to share location...
+              </div>
+            ) : (
+              <BusMap busLocations={busLocations} />
+            )}
           </div>
         )}
       </div>

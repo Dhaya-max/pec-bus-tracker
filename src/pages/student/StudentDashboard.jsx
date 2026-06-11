@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import axios from 'axios'
+import BusMap from '../../components/BusMap'
 
 const statusColor = {
   'On Time': 'bg-green-100 text-green-800',
@@ -16,7 +17,7 @@ export default function StudentDashboard() {
   const [buses, setBuses] = useState([])
   const [loading, setLoading] = useState(true)
   const { logout, name, token } = useAuth()
-  const { socket } = useSocket()
+  const { socket, busLocations } = useSocket()
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -78,16 +79,14 @@ export default function StudentDashboard() {
         <div className="flex items-center gap-4">
           <span className="text-sm text-blue-200">👋 {name}</span>
           <span className="text-sm text-blue-200">{time.toLocaleTimeString()}</span>
-          <button
-            onClick={logout}
-            className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50"
-          >
+          <button onClick={logout} className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50">
             Logout
           </button>
         </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Total Buses', value: counts.total, color: 'text-[#1E3A5F]' },
@@ -102,6 +101,19 @@ export default function StudentDashboard() {
           ))}
         </div>
 
+        {/* Live Map */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
+          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">📍 Live Bus Locations</h2>
+          {busLocations.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-gray-400 text-sm bg-[#EFF6FF] rounded-xl">
+              Waiting for driver to share location...
+            </div>
+          ) : (
+            <BusMap busLocations={busLocations} />
+          )}
+        </div>
+
+        {/* Search & Filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <input
             type="text"
@@ -124,6 +136,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
+        {/* Bus List */}
         {loading ? (
           <div className="text-center text-gray-400 py-10">Loading buses...</div>
         ) : (

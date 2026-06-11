@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 
@@ -11,7 +10,8 @@ export default function DriverPanel() {
   const [busStatus, setBusStatus] = useState('On Time')
   const [message, setMessage] = useState('')
   const [saved, setSaved] = useState(false)
-  const navigate = useNavigate()
+  const [sharing, setSharing] = useState(false)
+  const [locationStatus, setLocationStatus] = useState('')
   const { logout, name } = useAuth()
   const { socket } = useSocket()
 
@@ -31,13 +31,43 @@ export default function DriverPanel() {
       message,
       updatedAt: new Date().toISOString()
     }
-
-    if (socket) {
-      socket.emit('driver:update', update)
-    }
-
+    if (socket) socket.emit('driver:update', update)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('Geolocation not supported.')
+      return
+    }
+
+    setSharing(true)
+    setLocationStatus('Sharing location...')
+
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        const locationData = {
+          busNumber: 'Bus 01',
+          busId: 'bus-01',
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          updatedAt: new Date().toISOString()
+        }
+        if (socket) socket.emit('driver:location', locationData)
+        setLocationStatus('✅ Location shared live')
+      },
+      (err) => {
+        setLocationStatus('❌ Location access denied.')
+        setSharing(false)
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    )
+  }
+
+  const handleStopSharing = () => {
+    setSharing(false)
+    setLocationStatus('Location sharing stopped.')
   }
 
   return (
@@ -52,16 +82,39 @@ export default function DriverPanel() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-blue-200">👋 {name}</span>
-          <button
-            onClick={logout}
-            className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50"
-          >
+          <button onClick={logout} className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50">
             Logout
           </button>
         </div>
       </nav>
 
       <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
+
+        {/* Live Location */}
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">📍 Live Location</h2>
+          <p className="text-sm text-gray-500 mb-3">Share your real-time GPS location with students and admin.</p>
+          {locationStatus && (
+            <p className="text-sm mb-3 text-gray-600">{locationStatus}</p>
+          )}
+          {!sharing ? (
+            <button
+              onClick={handleShareLocation}
+              className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Start Sharing Location
+            </button>
+          ) : (
+            <button
+              onClick={handleStopSharing}
+              className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors"
+            >
+              Stop Sharing Location
+            </button>
+          )}
+        </div>
+
+        {/* Bus Info */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-4">My Bus Info</h2>
           <div className="grid grid-cols-2 gap-4">
@@ -79,6 +132,7 @@ export default function DriverPanel() {
           </div>
         </div>
 
+        {/* Current Stop */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Update Current Stop</h2>
           <div className="flex flex-wrap gap-2">
@@ -87,19 +141,16 @@ export default function DriverPanel() {
                 key={stop}
                 onClick={() => setCurrentStop(stop)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors
-                  ${currentStop === stop
-                    ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                  ${currentStop === stop ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
               >
                 {stop}
               </button>
             ))}
           </div>
-          <p className="text-sm text-gray-500 mt-3">
-            Selected: <span className="font-medium text-[#1E3A5F]">{currentStop}</span>
-          </p>
+          <p className="text-sm text-gray-500 mt-3">Selected: <span className="font-medium text-[#1E3A5F]">{currentStop}</span></p>
         </div>
 
+        {/* Bus Status */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Update Bus Status</h2>
           <div className="flex gap-3">
@@ -108,9 +159,7 @@ export default function DriverPanel() {
                 key={s}
                 onClick={() => setBusStatus(s)}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors
-                  ${busStatus === s
-                    ? statusColor[s]
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                  ${busStatus === s ? statusColor[s] : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
               >
                 {s}
               </button>
@@ -118,6 +167,7 @@ export default function DriverPanel() {
           </div>
         </div>
 
+        {/* Message */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Message to Students</h2>
           <textarea
