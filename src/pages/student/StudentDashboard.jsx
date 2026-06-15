@@ -45,7 +45,7 @@ export default function StudentDashboard() {
     socket.on('bus:updated', (data) => {
       setBuses(prev => prev.map(b =>
         b.busNumber === data.busNumber
-          ? { ...b, status: data.status, currentStop: data.currentStop }
+          ? { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
           : b
       ))
     })
@@ -70,8 +70,7 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-[#EFF6FF]">
       <nav className="bg-[#1E3A5F] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-        // Replace: <span className="text-2xl">🚌</span>
-<img src="/pnm.jpg" alt="PEC" className="w-10 h-10 rounded-full object-cover" />
+          <img src="/pnm.jpg" alt="PEC" className="w-10 h-10 rounded-full object-cover" />
           <div>
             <h1 className="font-bold text-lg leading-tight">PEC Bus Tracker</h1>
             <p className="text-xs text-blue-200">Student Portal</p>
@@ -118,7 +117,7 @@ export default function StudentDashboard() {
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <input
             type="text"
-            placeholder="Search by bus or route..."
+            placeholder="Search by bus number or route..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
@@ -148,9 +147,7 @@ export default function StudentDashboard() {
             {filtered.map(bus => (
               <div key={bus.busId} className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="bg-[#1E3A5F] text-white w-12 h-12 rounded-xl flex items-center justify-center text-xl">
-                    🚌
-                  </div>
+                  <img src="/pnm.jpg" alt="bus" className="w-12 h-12 rounded-xl object-cover" />
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-[#1E3A5F]">{bus.busNumber}</h3>
@@ -160,6 +157,9 @@ export default function StudentDashboard() {
                     </div>
                     <p className="text-sm text-gray-500">{bus.route} Route</p>
                     <p className="text-xs text-gray-400 mt-0.5">Last stop: {bus.currentStop} · Driver: {bus.driver}</p>
+                    {bus.message && (
+                      <p className="text-xs text-orange-500 mt-0.5">💬 {bus.message}</p>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
