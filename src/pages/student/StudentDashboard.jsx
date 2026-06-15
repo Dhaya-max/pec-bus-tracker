@@ -23,6 +23,11 @@ export default function StudentDashboard() {
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
+  useEffect(() => {
+  if (Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+}, [])
 
   useEffect(() => {
     const fetchBuses = async () => {
@@ -40,17 +45,27 @@ export default function StudentDashboard() {
     fetchBuses()
   }, [token])
 
-  useEffect(() => {
-    if (!socket) return
-    socket.on('bus:updated', (data) => {
-      setBuses(prev => prev.map(b =>
-        b.busNumber === data.busNumber
-          ? { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
-          : b
-      ))
-    })
-    return () => socket.off('bus:updated')
-  }, [socket])
+ useEffect(() => {
+  if (!socket) return
+  socket.on('bus:updated', (data) => {
+    setBuses(prev => prev.map(b => {
+      if (b.busNumber === data.busNumber) {
+        // Send browser notification if status changed to Delayed or Breakdown
+        if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
+          if (Notification.permission === 'granted') {
+            new Notification(`🚌 ${data.busNumber} - ${data.status}`, {
+              body: data.message || `${data.busNumber} is now ${data.status} at ${data.currentStop}`,
+              icon: '/pnm.jpg'
+            })
+          }
+        }
+        return { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
+      }
+      return b
+    }))
+  })
+  return () => socket.off('bus:updated')
+}, [socket])
 
   const filtered = buses.filter(b => {
     const matchSearch = b.route.toLowerCase().includes(search.toLowerCase()) ||
