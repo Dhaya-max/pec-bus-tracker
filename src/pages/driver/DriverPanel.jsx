@@ -15,6 +15,7 @@ export default function DriverPanel() {
   const [sharing, setSharing] = useState(false)
   const [locationStatus, setLocationStatus] = useState('')
   const [loadingBus, setLoadingBus] = useState(true)
+  const [passengers, setPassengers] = useState(0)
   const { logout, name, token } = useAuth()
   const { socket } = useSocket()
   const { dark, toggleDark } = useTheme()
@@ -34,6 +35,7 @@ export default function DriverPanel() {
         setBus(res.data)
         setCurrentStop(res.data.currentStop)
         setBusStatus(res.data.status)
+        setPassengers(res.data.passengers || 0)
       } catch (err) {
         console.error('No bus assigned', err)
       } finally {
@@ -42,6 +44,25 @@ export default function DriverPanel() {
     }
     fetchMyBus()
   }, [token])
+
+  const handlePassengerUpdate = async (newCount) => {
+    if (newCount < 0 || newCount > bus.capacity) return
+    setPassengers(newCount)
+    if (socket) socket.emit('driver:passengers', {
+      busId: bus.busId,
+      busNumber: bus.busNumber,
+      passengers: newCount,
+      capacity: bus.capacity
+    })
+    try {
+      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/passengers', {
+        busId: bus.busId,
+        passengers: newCount
+      }, { headers: { Authorization: `Bearer ${token}` } })
+    } catch (err) {
+      console.error('Failed to update passengers', err)
+    }
+  }
 
   const handleUpdate = async () => {
     if (!bus) return
@@ -52,6 +73,7 @@ export default function DriverPanel() {
       currentStop,
       status: busStatus,
       message,
+      passengers,
       updatedAt: new Date().toISOString()
     }
     if (socket) socket.emit('driver:update', update)
@@ -107,6 +129,8 @@ export default function DriverPanel() {
     </div>
   )
 
+  const occupancyPercent = Math.round((passengers / bus.capacity) * 100)
+  const occupancyColor = occupancyPercent >= 90 ? 'bg-red-500' : occupancyPercent >= 70 ? 'bg-yellow-500' : 'bg-green-500'
   const stops = ['Koyambedu', 'CMBT', 'Poonamallee', 'Porur', 'Vadapalani', 'Ashok Nagar', 'College Gate']
 
   return (
@@ -131,6 +155,8 @@ export default function DriverPanel() {
       </nav>
 
       <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
+
+        {/* Live Location */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">📍 Live Location</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Share your real-time GPS location with students and admin.</p>
@@ -146,6 +172,7 @@ export default function DriverPanel() {
           )}
         </div>
 
+        {/* Bus Info */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-4">My Bus Info</h2>
           <div className="grid grid-cols-2 gap-4">
@@ -163,6 +190,37 @@ export default function DriverPanel() {
           </div>
         </div>
 
+        {/* Passenger Counter */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-4">🧑‍🤝‍🧑 Passenger Count</h2>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => handlePassengerUpdate(passengers - 1)}
+              className="w-12 h-12 rounded-full bg-red-100 text-red-600 text-2xl font-bold hover:bg-red-200 transition-colors flex items-center justify-center"
+            >
+              −
+            </button>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-[#1E3A5F] dark:text-blue-400">{passengers}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">of {bus.capacity} seats</p>
+            </div>
+            <button
+              onClick={() => handlePassengerUpdate(passengers + 1)}
+              className="w-12 h-12 rounded-full bg-green-100 text-green-600 text-2xl font-bold hover:bg-green-200 transition-colors flex items-center justify-center"
+            >
+              +
+            </button>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div
+              className={`h-3 rounded-full transition-all ${occupancyColor}`}
+              style={{ width: `${occupancyPercent}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">{occupancyPercent}% full</p>
+        </div>
+
+        {/* Current Stop */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Current Stop</h2>
           <div className="flex flex-wrap gap-2">
@@ -180,6 +238,7 @@ export default function DriverPanel() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Selected: <span className="font-medium text-[#1E3A5F] dark:text-blue-400">{currentStop}</span></p>
         </div>
 
+        {/* Bus Status */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Bus Status</h2>
           <div className="flex gap-3">
@@ -196,6 +255,7 @@ export default function DriverPanel() {
           </div>
         </div>
 
+        {/* Message */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Message to Students</h2>
           <textarea

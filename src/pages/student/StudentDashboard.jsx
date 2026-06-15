@@ -47,25 +47,38 @@ export default function StudentDashboard() {
   }, [token])
 
   useEffect(() => {
-    if (!socket) return
-    socket.on('bus:updated', (data) => {
-      setBuses(prev => prev.map(b => {
-        if (b.busNumber === data.busNumber) {
-          if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
-            if (Notification.permission === 'granted') {
-              new Notification(`🚌 ${data.busNumber} - ${data.status}`, {
-                body: data.message || `${data.busNumber} is now ${data.status} at ${data.currentStop}`,
-                icon: '/pnm.jpg'
-              })
-            }
+  if (!socket) return
+
+  socket.on('bus:updated', (data) => {
+    setBuses(prev => prev.map(b => {
+      if (b.busNumber === data.busNumber) {
+        if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
+          if (Notification.permission === 'granted') {
+            new Notification(`🚌 ${data.busNumber} - ${data.status}`, {
+              body: data.message || `${data.busNumber} is now ${data.status} at ${data.currentStop}`,
+              icon: '/pnm.jpg'
+            })
           }
-          return { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
         }
-        return b
-      }))
-    })
-    return () => socket.off('bus:updated')
-  }, [socket])
+        return { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
+      }
+      return b
+    }))
+  })
+
+  socket.on('bus:passengers', (data) => {
+    setBuses(prev => prev.map(b =>
+      b.busId === data.busId
+        ? { ...b, passengers: data.passengers, capacity: data.capacity }
+        : b
+    ))
+  })
+
+  return () => {
+    socket.off('bus:updated')
+    socket.off('bus:passengers')
+  }
+}, [socket])
 
   const filtered = buses.filter(b => {
     const matchSearch = b.route.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,6 +190,24 @@ export default function StudentDashboard() {
                       <p className="text-xs text-orange-500 mt-0.5">💬 {bus.message}</p>
                     )}
                   </div>
+                  {bus.capacity && (
+  <div className="mt-1">
+    <div className="flex items-center gap-2">
+      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+        <div
+          className={`h-1.5 rounded-full ${
+            (bus.passengers / bus.capacity) >= 0.9 ? 'bg-red-500' :
+            (bus.passengers / bus.capacity) >= 0.7 ? 'bg-yellow-500' : 'bg-green-500'
+          }`}
+          style={{ width: `${Math.round(((bus.passengers || 0) / bus.capacity) * 100)}%` }}
+        />
+      </div>
+      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+        {bus.passengers || 0}/{bus.capacity} seats
+      </span>
+    </div>
+  </div>
+)}
                 </div>
                 <div className="text-right">
                   <p className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg">{bus.eta}</p>
