@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
+import { useTheme } from '../../context/ThemeContext'
 import axios from 'axios'
 
 const statuses = ['On Time', 'Delayed', 'Breakdown']
@@ -16,6 +17,7 @@ export default function DriverPanel() {
   const [loadingBus, setLoadingBus] = useState(true)
   const { logout, name, token } = useAuth()
   const { socket } = useSocket()
+  const { dark, toggleDark } = useTheme()
 
   const statusColor = {
     'On Time': 'bg-green-100 text-green-800 border-green-200',
@@ -94,13 +96,13 @@ export default function DriverPanel() {
   }
 
   if (loadingBus) return (
-    <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center">
+    <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900 flex items-center justify-center">
       <p className="text-gray-400">Loading your bus info...</p>
     </div>
   )
 
   if (!bus) return (
-    <div className="min-h-screen bg-[#EFF6FF] flex items-center justify-center">
+    <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900 flex items-center justify-center">
       <p className="text-red-400">No bus assigned to you. Contact admin.</p>
     </div>
   )
@@ -108,7 +110,7 @@ export default function DriverPanel() {
   const stops = ['Koyambedu', 'CMBT', 'Poonamallee', 'Porur', 'Vadapalani', 'Ashok Nagar', 'College Gate']
 
   return (
-    <div className="min-h-screen bg-[#EFF6FF]">
+    <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900">
       <nav className="bg-[#1E3A5F] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src="/pnm.jpg" alt="PEC" className="w-10 h-10 rounded-full object-cover" />
@@ -119,6 +121,9 @@ export default function DriverPanel() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-blue-200">👋 {name}</span>
+          <button onClick={toggleDark} className="text-sm px-3 py-1.5 rounded-lg border border-white text-white hover:bg-white hover:text-[#1E3A5F] transition-colors">
+            {dark ? '☀️' : '🌙'}
+          </button>
           <button onClick={logout} className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50">
             Logout
           </button>
@@ -126,12 +131,10 @@ export default function DriverPanel() {
       </nav>
 
       <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
-
-        {/* Live Location */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">📍 Live Location</h2>
-          <p className="text-sm text-gray-500 mb-3">Share your real-time GPS location with students and admin.</p>
-          {locationStatus && <p className="text-sm mb-3 text-gray-600">{locationStatus}</p>}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">📍 Live Location</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Share your real-time GPS location with students and admin.</p>
+          {locationStatus && <p className="text-sm mb-3 text-gray-600 dark:text-gray-300">{locationStatus}</p>}
           {!sharing ? (
             <button onClick={handleShareLocation} className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors">
               Start Sharing Location
@@ -143,9 +146,8 @@ export default function DriverPanel() {
           )}
         </div>
 
-        {/* Bus Info */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] font-bold text-lg mb-4">My Bus Info</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-4">My Bus Info</h2>
           <div className="grid grid-cols-2 gap-4">
             {[
               { label: 'Bus Number', value: bus.busNumber },
@@ -153,42 +155,40 @@ export default function DriverPanel() {
               { label: 'Departure', value: '8:00 AM' },
               { label: 'Capacity', value: `${bus.capacity} seats` },
             ].map(i => (
-              <div key={i.label} className="bg-[#EFF6FF] rounded-lg p-3">
-                <p className="text-xs text-gray-500">{i.label}</p>
-                <p className="font-semibold text-[#1E3A5F] mt-0.5">{i.value}</p>
+              <div key={i.label} className="bg-[#EFF6FF] dark:bg-gray-700 rounded-lg p-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{i.label}</p>
+                <p className="font-semibold text-[#1E3A5F] dark:text-blue-400 mt-0.5">{i.value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Current Stop */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Update Current Stop</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Current Stop</h2>
           <div className="flex flex-wrap gap-2">
             {stops.map(stop => (
               <button
                 key={stop}
                 onClick={() => setCurrentStop(stop)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors
-                  ${currentStop === stop ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                  ${currentStop === stop ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]' : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600 hover:bg-gray-50'}`}
               >
                 {stop}
               </button>
             ))}
           </div>
-          <p className="text-sm text-gray-500 mt-3">Selected: <span className="font-medium text-[#1E3A5F]">{currentStop}</span></p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Selected: <span className="font-medium text-[#1E3A5F] dark:text-blue-400">{currentStop}</span></p>
         </div>
 
-        {/* Bus Status */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Update Bus Status</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Bus Status</h2>
           <div className="flex gap-3">
             {statuses.map(s => (
               <button
                 key={s}
                 onClick={() => setBusStatus(s)}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors
-                  ${busStatus === s ? statusColor[s] : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                  ${busStatus === s ? statusColor[s] : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600 hover:bg-gray-50'}`}
               >
                 {s}
               </button>
@@ -196,15 +196,14 @@ export default function DriverPanel() {
           </div>
         </div>
 
-        {/* Message */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] font-bold text-lg mb-3">Message to Students</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Message to Students</h2>
           <textarea
             rows={3}
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder="e.g. Stuck in traffic near Koyambedu, 10 min delay..."
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none"
+            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none"
           />
         </div>
 
