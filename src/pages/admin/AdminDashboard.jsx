@@ -13,6 +13,8 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false)
   const { logout, token } = useAuth()
   const { busLocations } = useSocket()
+  const [editBus, setEditBus] = useState(null)
+const [editForm, setEditForm] = useState({ driver: '', route: '', capacity: '' })
 
   const API = 'https://pec-bus-tracker-server-production.up.railway.app'
   const headers = { Authorization: `Bearer ${token}` }
@@ -74,6 +76,23 @@ export default function AdminDashboard() {
       console.error('Failed to toggle status', err)
     }
   }
+  const handleEditSave = async () => {
+  try {
+    await axios.post(`${API}/api/bus/update`, {
+      busId: editBus.busId,
+      driver: editForm.driver,
+      route: editForm.route,
+      capacity: Number(editForm.capacity)
+    }, { headers })
+    setBuses(prev => prev.map(b => b.busId === editBus.busId
+      ? { ...b, driver: editForm.driver, route: editForm.route, capacity: Number(editForm.capacity) }
+      : b
+    ))
+    setEditBus(null)
+  } catch (err) {
+    console.error('Failed to update bus', err)
+  }
+}
 
   return (
     <div className="min-h-screen bg-[#EFF6FF]">
@@ -199,6 +218,12 @@ export default function AdminDashboard() {
                               Toggle
                             </button>
                             <button
+  onClick={() => { setEditBus(bus); setEditForm({ driver: bus.driver, route: bus.route, capacity: bus.capacity }) }}
+  className="text-xs text-green-600 border border-green-300 px-2 py-1 rounded hover:bg-green-50"
+>
+  Edit
+</button>
+                            <button
                               onClick={() => handleDelete(bus.busId)}
                               className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
                             >
@@ -270,6 +295,54 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+      {editBus && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+      <h3 className="font-bold text-[#1E3A5F] text-lg mb-4">Edit {editBus.busNumber}</h3>
+      <div className="space-y-3">
+        <div>
+          <label className="text-sm text-gray-600 mb-1 block">Driver Name</label>
+          <input
+            value={editForm.driver}
+            onChange={e => setEditForm({ ...editForm, driver: e.target.value })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+          />
+        </div>
+        <div>
+          <label className="text-sm text-gray-600 mb-1 block">Route</label>
+          <input
+            value={editForm.route}
+            onChange={e => setEditForm({ ...editForm, route: e.target.value })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+          />
+        </div>
+        <div>
+          <label className="text-sm text-gray-600 mb-1 block">Capacity</label>
+          <input
+            type="number"
+            value={editForm.capacity}
+            onChange={e => setEditForm({ ...editForm, capacity: e.target.value })}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+          />
+        </div>
+      </div>
+      <div className="flex gap-3 mt-5">
+        <button
+          onClick={() => setEditBus(null)}
+          className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleEditSave}
+          className="flex-1 bg-[#1E3A5F] text-white py-2 rounded-lg text-sm hover:bg-[#162d4a]"
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
