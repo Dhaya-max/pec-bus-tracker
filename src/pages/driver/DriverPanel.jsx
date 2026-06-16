@@ -135,47 +135,48 @@ export default function DriverPanel() {
 
   return (
     <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900">
-      <nav className="bg-[#1E3A5F] text-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/pnm.jpg" alt="PEC" className="w-10 h-10 rounded-full object-cover" />
+      {/* Navbar */}
+      <nav className="bg-[#1E3A5F] text-white px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/pnm.jpg" alt="PEC" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
           <div>
-            <h1 className="font-bold text-lg leading-tight">PEC Bus Tracker</h1>
+            <h1 className="font-bold text-base leading-tight">PEC Bus Tracker</h1>
             <p className="text-xs text-blue-200">Driver Panel</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-blue-200">👋 {name}</span>
-          <button onClick={toggleDark} className="text-sm px-3 py-1.5 rounded-lg border border-white text-white hover:bg-white hover:text-[#1E3A5F] transition-colors">
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:block text-sm text-blue-200 truncate max-w-[100px]">👋 {name}</span>
+          <button onClick={toggleDark} className="text-lg px-2 py-1 rounded-lg border border-white text-white hover:bg-white hover:text-[#1E3A5F] transition-colors">
             {dark ? '☀️' : '🌙'}
           </button>
-          <button onClick={logout} className="bg-white text-[#1E3A5F] text-sm px-4 py-1.5 rounded-lg font-medium hover:bg-blue-50">
+          <button onClick={logout} className="bg-white text-[#1E3A5F] text-xs sm:text-sm px-3 py-1.5 rounded-lg font-medium hover:bg-blue-50 whitespace-nowrap">
             Logout
           </button>
         </div>
       </nav>
 
-      <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
+      <div className="max-w-xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
 
         {/* Live Location */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">📍 Live Location</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Share your real-time GPS location with students and admin.</p>
-          {locationStatus && <p className="text-sm mb-3 text-gray-600 dark:text-gray-300">{locationStatus}</p>}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-2">📍 Live Location</h2>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3">Share your real-time GPS location with students and admin.</p>
+          {locationStatus && <p className="text-xs sm:text-sm mb-3 text-gray-600 dark:text-gray-300">{locationStatus}</p>}
           {!sharing ? (
-            <button onClick={handleShareLocation} className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors">
+            <button onClick={handleShareLocation} className="w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors text-sm">
               Start Sharing Location
             </button>
           ) : (
-            <button onClick={handleStopSharing} className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors">
+            <button onClick={handleStopSharing} className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors text-sm">
               Stop Sharing Location
             </button>
           )}
         </div>
 
         {/* Bus Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-4">My Bus Info</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">My Bus Info</h2>
+          <div className="grid grid-cols-2 gap-3">
             {[
               { label: 'Bus Number', value: bus.busNumber },
               { label: 'Route', value: bus.route },
@@ -184,29 +185,29 @@ export default function DriverPanel() {
             ].map(i => (
               <div key={i.label} className="bg-[#EFF6FF] dark:bg-gray-700 rounded-lg p-3">
                 <p className="text-xs text-gray-500 dark:text-gray-400">{i.label}</p>
-                <p className="font-semibold text-[#1E3A5F] dark:text-blue-400 mt-0.5">{i.value}</p>
+                <p className="font-semibold text-[#1E3A5F] dark:text-blue-400 mt-0.5 text-sm">{i.value}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Passenger Counter */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-4">🧑‍🤝‍🧑 Passenger Count</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-4">🧑‍🤝‍🧑 Passenger Count</h2>
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => handlePassengerUpdate(passengers - 1)}
-              className="w-12 h-12 rounded-full bg-red-100 text-red-600 text-2xl font-bold hover:bg-red-200 transition-colors flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-red-100 text-red-600 text-3xl font-bold hover:bg-red-200 transition-colors flex items-center justify-center"
             >
               −
             </button>
             <div className="text-center">
-              <p className="text-4xl font-bold text-[#1E3A5F] dark:text-blue-400">{passengers}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">of {bus.capacity} seats</p>
+              <p className="text-5xl font-bold text-[#1E3A5F] dark:text-blue-400">{passengers}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">of {bus.capacity} seats</p>
             </div>
             <button
               onClick={() => handlePassengerUpdate(passengers + 1)}
-              className="w-12 h-12 rounded-full bg-green-100 text-green-600 text-2xl font-bold hover:bg-green-200 transition-colors flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-green-100 text-green-600 text-3xl font-bold hover:bg-green-200 transition-colors flex items-center justify-center"
             >
               +
             </button>
@@ -221,33 +222,35 @@ export default function DriverPanel() {
         </div>
 
         {/* Current Stop */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Current Stop</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">Update Current Stop</h2>
           <div className="flex flex-wrap gap-2">
             {stops.map(stop => (
               <button
                 key={stop}
                 onClick={() => setCurrentStop(stop)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors
-                  ${currentStop === stop ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]' : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600 hover:bg-gray-50'}`}
+                className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium border transition-colors
+                  ${currentStop === stop ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]' : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600'}`}
               >
                 {stop}
               </button>
             ))}
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Selected: <span className="font-medium text-[#1E3A5F] dark:text-blue-400">{currentStop}</span></p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3">
+            Selected: <span className="font-medium text-[#1E3A5F] dark:text-blue-400">{currentStop}</span>
+          </p>
         </div>
 
         {/* Bus Status */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Update Bus Status</h2>
-          <div className="flex gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">Update Bus Status</h2>
+          <div className="flex gap-2">
             {statuses.map(s => (
               <button
                 key={s}
                 onClick={() => setBusStatus(s)}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors
-                  ${busStatus === s ? statusColor[s] : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600 hover:bg-gray-50'}`}
+                className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-medium border transition-colors
+                  ${busStatus === s ? statusColor[s] : 'bg-white dark:bg-gray-700 dark:text-gray-300 text-gray-600 border-gray-300 dark:border-gray-600'}`}
               >
                 {s}
               </button>
@@ -256,8 +259,8 @@ export default function DriverPanel() {
         </div>
 
         {/* Message */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
-          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-lg mb-3">Message to Students</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+          <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">Message to Students</h2>
           <textarea
             rows={3}
             value={message}
@@ -269,7 +272,7 @@ export default function DriverPanel() {
 
         <button
           onClick={handleUpdate}
-          className="w-full bg-[#1E3A5F] text-white py-3 rounded-xl font-semibold hover:bg-[#162d4a] transition-colors"
+          className="w-full bg-[#1E3A5F] text-white py-3 rounded-xl font-semibold hover:bg-[#162d4a] transition-colors text-sm sm:text-base"
         >
           {saved ? '✅ Updated Successfully!' : 'Push Update to Students'}
         </button>
