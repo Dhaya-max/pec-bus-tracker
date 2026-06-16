@@ -27,9 +27,16 @@ export default function StudentDashboard() {
     return () => clearInterval(t)
   }, [])
 
-  useEffect(() => {
-    if (Notification.permission === 'default') Notification.requestPermission()
-  }, [])
+ useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('SW registered', reg)
+    })
+  }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+}, [])
 
   useEffect(() => {
     const fetchBuses = async () => {
@@ -54,10 +61,14 @@ export default function StudentDashboard() {
         if (b.busNumber === data.busNumber) {
           if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
             if (Notification.permission === 'granted') {
-              new Notification(`🚌 ${data.busNumber} - ${data.status}`, {
-                body: data.message || `${data.busNumber} is now ${data.status} at ${data.currentStop}`,
-                icon: '/pnm.jpg'
-              })
+            navigator.serviceWorker.ready.then(reg => {
+  reg.showNotification(`🚌 ${data.busNumber} - ${data.status}`, {
+    body: data.message || `${data.busNumber} is now ${data.status} at ${data.currentStop}`,
+    icon: '/pnm.jpg',
+    badge: '/pnm.jpg',
+    vibrate: [200, 100, 200]
+  })
+})
             }
           }
           return { ...b, status: data.status, currentStop: data.currentStop, message: data.message }
