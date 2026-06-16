@@ -20,6 +20,7 @@ export default function StudentDashboard() {
   const { logout, name, token } = useAuth()
   const { socket, busLocations } = useSocket()
   const { dark, toggleDark } = useTheme()
+  const [preferredBusId, setPreferredBusId] = useState(localStorage.getItem('preferredBusId') || null)
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -75,14 +76,18 @@ export default function StudentDashboard() {
     }
   }, [socket])
 
-  const filtered = buses.filter(b => {
+  const filtered = buses
+  .filter(b => {
     const matchSearch = b.route.toLowerCase().includes(search.toLowerCase()) ||
       b.busNumber.toLowerCase().includes(search.toLowerCase()) ||
       b.currentStop?.toLowerCase().includes(search.toLowerCase()) ||
       b.driver?.toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filter === 'All' || b.status === filter
+    const matchFilter = filter === 'All' ? true :
+      filter === 'My Bus' ? b.busId === preferredBusId :
+      b.status === filter
     return matchSearch && matchFilter
   })
+  .sort((a, b) => a.busId === preferredBusId ? -1 : b.busId === preferredBusId ? 1 : 0)
 
   const counts = {
     total: buses.length,
@@ -90,6 +95,15 @@ export default function StudentDashboard() {
     delayed: buses.filter(b => b.status === 'Delayed').length,
     breakdown: buses.filter(b => b.status === 'Breakdown').length,
   }
+  const togglePreferred = (busId) => {
+  if (preferredBusId === busId) {
+    setPreferredBusId(null)
+    localStorage.removeItem('preferredBusId')
+  } else {
+    setPreferredBusId(busId)
+    localStorage.setItem('preferredBusId', busId)
+  }
+}
 
   return (
     <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900">
@@ -152,18 +166,18 @@ export default function StudentDashboard() {
             onChange={e => setSearch(e.target.value)}
             className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
           />
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {['All', 'On Time', 'Delayed', 'Breakdown'].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0
-                  ${filter === f ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+       <div className="flex gap-2 overflow-x-auto pb-1">
+  {['All', 'My Bus', 'On Time', 'Delayed', 'Breakdown'].map(f => (
+    <button
+      key={f}
+      onClick={() => setFilter(f)}
+      className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0
+        ${filter === f ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
+    >
+      {f === 'My Bus' ? '⭐ My Bus' : f}
+    </button>
+  ))}
+</div>
         </div>
 
         {/* Bus List */}
@@ -182,6 +196,13 @@ export default function StudentDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-[#1E3A5F] dark:text-blue-400 text-sm sm:text-base">{bus.busNumber}</h3>
+                        <button
+  onClick={() => togglePreferred(bus.busId)}
+  className="text-lg leading-none"
+  title={preferredBusId === bus.busId ? 'Remove from My Bus' : 'Set as My Bus'}
+>
+  {preferredBusId === bus.busId ? '⭐' : '☆'}
+</button>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[bus.status]}`}>
                           {bus.status}
                         </span>
