@@ -4,6 +4,7 @@ import { useSocket } from '../../context/SocketContext'
 import { useTheme } from '../../context/ThemeContext'
 import axios from 'axios'
 import BusMap from '../../components/BusMap'
+import SkeletonCard from '../../components/SkeletonCard'
 
 const statusColor = {
   'On Time': 'bg-green-100 text-green-800',
@@ -192,9 +193,11 @@ export default function StudentDashboard() {
         </div>
 
         {/* Bus List */}
-        {loading ? (
-          <div className="text-center text-gray-400 py-10">Loading buses...</div>
-        ) : (
+       {loading ? (
+  <div className="space-y-3">
+    {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
+  </div>
+) : (
           <div className="space-y-3">
             {filtered.length === 0 && (
               <div className="text-center text-gray-400 py-10">No buses found.</div>

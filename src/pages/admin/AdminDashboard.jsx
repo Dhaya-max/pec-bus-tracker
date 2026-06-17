@@ -6,6 +6,7 @@ import BusMap from '../../components/BusMap'
 import axios from 'axios'
 import Toast from '../../components/Toast'
 import useToast from '../../hooks/useToast'
+import SkeletonCard from '../../components/SkeletonCard'
 
 export default function AdminDashboard() {
   const [buses, setBuses] = useState([])
@@ -193,9 +194,16 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {loading ? (
-              <div className="text-center text-gray-400 py-10">Loading buses...</div>
-            ) : (
+           {loading ? (
+  <>
+    <div className="hidden md:block space-y-3">
+      {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
+    </div>
+    <div className="md:hidden space-y-3">
+      {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
+    </div>
+  </>
+) : (
               <>
                 {/* Desktop Table */}
                 <div className="hidden md:block overflow-x-auto">
