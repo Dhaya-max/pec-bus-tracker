@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { useTheme } from '../../context/ThemeContext'
 import axios from 'axios'
+import Toast from '../../components/Toast'
+import useToast from '../../hooks/useToast'
 
 const statuses = ['On Time', 'Delayed', 'Breakdown']
 
@@ -19,6 +21,7 @@ export default function DriverPanel() {
   const { logout, name, token } = useAuth()
   const { socket } = useSocket()
   const { dark, toggleDark } = useTheme()
+  const { toast, showToast, hideToast } = useToast()
 
   const statusColor = {
     'On Time': 'bg-green-100 text-green-800 border-green-200',
@@ -46,47 +49,48 @@ export default function DriverPanel() {
   }, [token])
 
   const handlePassengerUpdate = async (newCount) => {
-    if (newCount < 0 || newCount > bus.capacity) return
-    setPassengers(newCount)
-    if (socket) socket.emit('driver:passengers', {
+  if (newCount < 0 || newCount > bus.capacity) return
+  setPassengers(newCount)
+  if (socket) socket.emit('driver:passengers', {
+    busId: bus.busId,
+    busNumber: bus.busNumber,
+    passengers: newCount,
+    capacity: bus.capacity
+  })
+  try {
+    await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/passengers', {
       busId: bus.busId,
-      busNumber: bus.busNumber,
-      passengers: newCount,
-      capacity: bus.capacity
-    })
-    try {
-      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/passengers', {
-        busId: bus.busId,
-        passengers: newCount
-      }, { headers: { Authorization: `Bearer ${token}` } })
-    } catch (err) {
-      console.error('Failed to update passengers', err)
-    }
+      passengers: newCount
+    }, { headers: { Authorization: `Bearer ${token}` } })
+  } catch (err) {
+    showToast('Failed to update passengers', 'error')
   }
-
+}
   const handleUpdate = async () => {
-    if (!bus) return
-    const update = {
-      busId: bus.busId,
-      busNumber: bus.busNumber,
-      route: bus.route,
-      currentStop,
-      status: busStatus,
-      message,
-      passengers,
-      updatedAt: new Date().toISOString()
-    }
-    if (socket) socket.emit('driver:update', update)
-    try {
-      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-    } catch (err) {
-      console.error('Failed to update status', err)
-    }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  if (!bus) return
+  const update = {
+    busId: bus.busId,
+    busNumber: bus.busNumber,
+    route: bus.route,
+    currentStop,
+    status: busStatus,
+    message,
+    passengers,
+    updatedAt: new Date().toISOString()
   }
+  if (socket) socket.emit('driver:update', update)
+  try {
+    await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    showToast('Update pushed to students!', 'success')
+  } catch (err) {
+    console.error('Failed to update status', err)
+    showToast('Failed to push update', 'error')
+  }
+  setSaved(true)
+  setTimeout(() => setSaved(false), 3000)
+}
 
   const handleShareLocation = () => {
     if (!navigator.geolocation || !bus) return
@@ -277,6 +281,7 @@ export default function DriverPanel() {
           {saved ? '✅ Updated Successfully!' : 'Push Update to Students'}
         </button>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
     </div>
   )
 }

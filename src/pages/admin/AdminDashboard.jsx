@@ -4,6 +4,8 @@ import { useSocket } from '../../context/SocketContext'
 import { useTheme } from '../../context/ThemeContext'
 import BusMap from '../../components/BusMap'
 import axios from 'axios'
+import Toast from '../../components/Toast'
+import useToast from '../../hooks/useToast'
 
 export default function AdminDashboard() {
   const [buses, setBuses] = useState([])
@@ -17,6 +19,7 @@ export default function AdminDashboard() {
   const { logout, token } = useAuth()
   const { busLocations } = useSocket()
   const { dark, toggleDark } = useTheme()
+  const { toast, showToast, hideToast } = useToast()
 
   const API = 'https://pec-bus-tracker-server-production.up.railway.app'
   const headers = { Authorization: `Bearer ${token}` }
@@ -35,68 +38,73 @@ export default function AdminDashboard() {
     fetchBuses()
   }, [token])
 
-  const handleAdd = async () => {
-    if (!form.number || !form.route || !form.driver) return
-    setSaving(true)
-    try {
-      const newBus = {
-        busId: `bus-${Date.now()}`,
-        busNumber: form.number,
-        route: form.route,
-        driver: form.driver,
-        capacity: Number(form.capacity) || 52,
-        status: 'On Time',
-        currentStop: '',
-        eta: 'N/A'
-      }
-      const res = await axios.post(`${API}/api/bus/add`, newBus, { headers })
-      setBuses(prev => [...prev, res.data.bus])
-      setForm({ number: '', route: '', driver: '', capacity: '' })
-      setShowForm(false)
-    } catch (err) {
-      console.error('Failed to add bus', err)
-    } finally {
-      setSaving(false)
-    }
+ const handleAdd = async () => {
+  if (!form.number || !form.route || !form.driver) {
+    showToast('Please fill all required fields', 'warning')
+    return
   }
-
-  const handleDelete = async (busId) => {
-    try {
-      await axios.delete(`${API}/api/bus/delete/${busId}`, { headers })
-      setBuses(prev => prev.filter(b => b.busId !== busId))
-    } catch (err) {
-      console.error('Failed to delete bus', err)
+  setSaving(true)
+  try {
+    const newBus = {
+      busId: `bus-${Date.now()}`,
+      busNumber: form.number,
+      route: form.route,
+      driver: form.driver,
+      capacity: Number(form.capacity) || 52,
+      status: 'On Time',
+      currentStop: '',
+      eta: 'N/A'
     }
+    const res = await axios.post(`${API}/api/bus/add`, newBus, { headers })
+    setBuses(prev => [...prev, res.data.bus])
+    setForm({ number: '', route: '', driver: '', capacity: '' })
+    setShowForm(false)
+    showToast(`${form.number} added successfully!`, 'success')
+  } catch (err) {
+    console.error('Failed to add bus', err)
+    showToast('Failed to add bus', 'error')
+  } finally {
+    setSaving(false)
   }
-
-  const toggleStatus = async (busId, currentStatus) => {
-    const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
-    try {
-      await axios.post(`${API}/api/bus/toggle`, { busId, status: newStatus }, { headers })
-      setBuses(prev => prev.map(b => b.busId === busId ? { ...b, status: newStatus } : b))
-    } catch (err) {
-      console.error('Failed to toggle status', err)
-    }
+}
+ const handleDelete = async (busId, busNumber) => {
+  try {
+    await axios.delete(`${API}/api/bus/delete/${busId}`, { headers })
+    setBuses(prev => prev.filter(b => b.busId !== busId))
+    showToast(`${busNumber} deleted`, 'info')
+  } catch (err) {
+    showToast('Failed to delete bus', 'error')
   }
+}
 
-  const handleEditSave = async () => {
-    try {
-      await axios.post(`${API}/api/bus/update`, {
-        busId: editBus.busId,
-        driver: editForm.driver,
-        route: editForm.route,
-        capacity: Number(editForm.capacity)
-      }, { headers })
-      setBuses(prev => prev.map(b => b.busId === editBus.busId
-        ? { ...b, driver: editForm.driver, route: editForm.route, capacity: Number(editForm.capacity) }
-        : b
-      ))
-      setEditBus(null)
-    } catch (err) {
-      console.error('Failed to update bus', err)
-    }
+ const toggleStatus = async (busId, currentStatus) => {
+  const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
+  try {
+    await axios.post(`${API}/api/bus/toggle`, { busId, status: newStatus }, { headers })
+    setBuses(prev => prev.map(b => b.busId === busId ? { ...b, status: newStatus } : b))
+    showToast(`Status changed to ${newStatus}`, 'info')
+  } catch (err) {
+    showToast('Failed to toggle status', 'error')
   }
-
+}
+ const handleEditSave = async () => {
+  try {
+    await axios.post(`${API}/api/bus/update`, {
+      busId: editBus.busId,
+      driver: editForm.driver,
+      route: editForm.route,
+      capacity: Number(editForm.capacity)
+    }, { headers })
+    setBuses(prev => prev.map(b => b.busId === editBus.busId
+      ? { ...b, driver: editForm.driver, route: editForm.route, capacity: Number(editForm.capacity) }
+      : b
+    ))
+    setEditBus(null)
+    showToast('Bus updated successfully!', 'success')
+  } catch (err) {
+    showToast('Failed to update bus', 'error')
+  }
+}
   return (
     <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900">
       {/* Navbar */}
@@ -206,6 +214,7 @@ export default function AdminDashboard() {
                       {buses.map(bus => (
                         <tr key={bus.busId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="py-3 font-medium text-[#1E3A5F] dark:text-blue-400">{bus.busNumber}</td>
+                          onClick={() => handleDelete(bus.busId, bus.busNumber)}
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.route}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.driver}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.capacity}</td>
@@ -344,6 +353,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
     </div>
   )
 }
