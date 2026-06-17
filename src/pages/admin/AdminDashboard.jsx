@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                       {buses.map(bus => (
                         <tr key={bus.busId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="py-3 font-medium text-[#1E3A5F] dark:text-blue-400">{bus.busNumber}</td>
-                          onClick={() => handleDelete(bus.busId, bus.busNumber)}
+                        <button onClick={() => handleDelete(bus.busId, bus.busNumber)} className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50">Delete</button>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.route}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.driver}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.capacity}</td>
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => toggleStatus(bus.busId, bus.status)} className="flex-1 text-xs text-[#1E3A5F] border border-[#1E3A5F] px-2 py-1.5 rounded-lg">Toggle</button>
                         <button onClick={() => { setEditBus(bus); setEditForm({ driver: bus.driver, route: bus.route, capacity: bus.capacity }) }} className="flex-1 text-xs text-green-600 border border-green-300 px-2 py-1.5 rounded-lg">Edit</button>
-                        <button onClick={() => handleDelete(bus.busId)} className="flex-1 text-xs text-red-600 border border-red-300 px-2 py-1.5 rounded-lg">Delete</button>
+                       <button onClick={() => handleDelete(bus.busId, bus.busNumber)} className="flex-1 text-xs text-red-600 border border-red-300 px-2 py-1.5 rounded-lg">Delete</button>
                       </div>
                     </div>
                   ))}
