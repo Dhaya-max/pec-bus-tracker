@@ -6,6 +6,8 @@ import axios from 'axios'
 import BusMap from '../../components/BusMap'
 import SkeletonCard from '../../components/SkeletonCard'
 
+
+
 const statusColor = {
   'On Time': 'bg-green-100 text-green-800',
   'Delayed': 'bg-yellow-100 text-yellow-800',
@@ -22,6 +24,7 @@ export default function StudentDashboard() {
   const { socket, busLocations } = useSocket()
   const { dark, toggleDark } = useTheme()
   const [preferredBusId, setPreferredBusId] = useState(localStorage.getItem('preferredBusId') || null)
+  const [selectedBus, setSelectedBus] = useState(null)
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -267,6 +270,90 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
+      {selectedBus && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setSelectedBus(null)}>
+    <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+      
+      
+      
+      {/* Header */}
+      <div className="bg-[#1E3A5F] text-white p-5 rounded-t-2xl flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/pnm.jpg" alt="bus" className="w-10 h-10 rounded-xl object-cover" />
+          <div>
+            <h2 className="font-bold text-lg">{selectedBus.busNumber}</h2>
+            <p className="text-xs text-blue-200">{selectedBus.route} Route</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[selectedBus.status]}`}>
+            {selectedBus.status}
+          </span>
+          <button onClick={() => setSelectedBus(null)} className="text-white opacity-70 hover:opacity-100 text-xl ml-2">✕</button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: 'Driver', value: selectedBus.driver, icon: '👨‍✈️' },
+            { label: 'Capacity', value: `${selectedBus.capacity} seats`, icon: '💺' },
+            { label: 'Current Stop', value: selectedBus.currentStop || 'N/A', icon: '📍' },
+            { label: 'ETA', value: selectedBus.eta || 'N/A', icon: '⏱️' },
+          ].map(i => (
+            <div key={i.label} className="bg-[#EFF6FF] dark:bg-gray-700 rounded-xl p-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">{i.icon} {i.label}</p>
+              <p className="font-semibold text-[#1E3A5F] dark:text-blue-400 mt-0.5 text-sm">{i.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Occupancy */}
+        {selectedBus.capacity > 0 && (
+          <div>
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <span>🧑‍🤝‍🧑 Occupancy</span>
+              <span>{selectedBus.passengers || 0}/{selectedBus.capacity} seats</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+              <div
+                className={`h-2.5 rounded-full ${
+                  ((selectedBus.passengers || 0) / selectedBus.capacity) >= 0.9 ? 'bg-red-500' :
+                  ((selectedBus.passengers || 0) / selectedBus.capacity) >= 0.7 ? 'bg-yellow-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.round(((selectedBus.passengers || 0) / selectedBus.capacity) * 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1 text-right">
+              {Math.round(((selectedBus.passengers || 0) / selectedBus.capacity) * 100)}% full
+            </p>
+          </div>
+        )}
+
+        {/* Message */}
+        {selectedBus.message && (
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3">
+            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mb-1">💬 Driver Message</p>
+            <p className="text-sm text-orange-700 dark:text-orange-300">{selectedBus.message}</p>
+          </div>
+        )}
+
+        {/* Preferred button */}
+        <button
+          onClick={() => togglePreferred(selectedBus.busId)}
+          className={`w-full py-2.5 rounded-xl font-medium text-sm transition-colors ${
+            preferredBusId === selectedBus.busId
+              ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+              : 'bg-[#1E3A5F] text-white hover:bg-[#162d4a]'
+          }`}
+        >
+          {preferredBusId === selectedBus.busId ? '⭐ Remove from My Bus' : '☆ Set as My Bus'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
