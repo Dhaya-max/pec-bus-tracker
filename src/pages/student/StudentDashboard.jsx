@@ -156,6 +156,17 @@ export default function StudentDashboard() {
             </div>
           ))}
         </div>
+        {buses.some(b => b.status === 'Breakdown' && b.message?.includes('🆘')) && (
+  <div className="bg-red-600 text-white rounded-xl p-4 mb-4 flex items-center gap-3 animate-pulse">
+    <span className="text-2xl">🆘</span>
+    <div>
+      <p className="font-bold">Emergency Alert!</p>
+      <p className="text-sm opacity-90">
+        {buses.find(b => b.status === 'Breakdown' && b.message?.includes('🆘'))?.busNumber} — {buses.find(b => b.status === 'Breakdown' && b.message?.includes('🆘'))?.message}
+      </p>
+    </div>
+  </div>
+)}
 
         {/* Live Map */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5 mb-4 sm:mb-6">

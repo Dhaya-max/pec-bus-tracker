@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import axios from 'axios'
 import Toast from '../../components/Toast'
 import useToast from '../../hooks/useToast'
+const { toast, showToast, hideToast } = useToast()
 
 const statuses = ['On Time', 'Delayed', 'Breakdown']
 
@@ -120,6 +121,29 @@ export default function DriverPanel() {
     setSharing(false)
     setLocationStatus('Location sharing stopped.')
   }
+  const handleSOS = async () => {
+  if (!bus) return
+  const update = {
+    busId: bus.busId,
+    busNumber: bus.busNumber,
+    route: bus.route,
+    currentStop,
+    status: 'Breakdown',
+    message: '🆘 Emergency! Bus has broken down. Please arrange alternate transport.',
+    passengers,
+    updatedAt: new Date().toISOString()
+  }
+  setBusStatus('Breakdown')
+  if (socket) socket.emit('driver:update', update)
+  try {
+    await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    showToast('🆘 SOS Alert sent to all students!', 'error')
+  } catch (err) {
+    showToast('Failed to send SOS', 'error')
+  }
+}
 
   if (loadingBus) return (
     <div className="min-h-screen bg-[#EFF6FF] dark:bg-gray-900 flex items-center justify-center">
@@ -176,6 +200,18 @@ export default function DriverPanel() {
             </button>
           )}
         </div>
+        {/* SOS Button */}
+<button
+  onClick={() => {
+    if (window.confirm('Send SOS alert? This will notify all students of a breakdown.')) {
+      handleSOS()
+    }
+  }}
+  className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
+>
+  <span className="text-2xl">🆘</span>
+  SOS — Emergency Breakdown
+</button>
 
         {/* Bus Info */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
@@ -281,7 +317,7 @@ export default function DriverPanel() {
           {saved ? '✅ Updated Successfully!' : 'Push Update to Students'}
         </button>
       </div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
+     {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
     </div>
   )
 }
