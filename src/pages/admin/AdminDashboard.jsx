@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const { busLocations } = useSocket()
   const { dark, toggleDark } = useTheme()
   const { toast, showToast, hideToast } = useToast()
+  const [busSearch, setBusSearch] = useState('')
 
   const API = 'https://pec-bus-tracker-server-production.up.railway.app'
   const headers = { Authorization: `Bearer ${token}` }
@@ -193,8 +194,17 @@ export default function AdminDashboard() {
                 </button>
               </div>
             )}
+            
 
-           {loading ? (
+           <input
+  type="text"
+  placeholder="Search by bus number, route or driver..."
+  value={busSearch}
+  onChange={e => setBusSearch(e.target.value)}
+  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] mb-4"
+/>
+
+{loading ?  (
   <>
     <div className="hidden md:block space-y-3">
       {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
@@ -219,7 +229,10 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
-                      {buses.map(bus => (
+                      {buses.filter(b =>
+  b.busNumber?.toLowerCase().includes(busSearch.toLowerCase()) ||
+  b.route?.toLowerCase().includes(busSearch.toLowerCase()) ||
+  b.driver?.toLowerCase().includes(busSearch.toLowerCase())).map(bus => (
                         <tr key={bus.busId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="py-3 font-medium text-[#1E3A5F] dark:text-blue-400">{bus.busNumber}</td>
                         <button onClick={() => handleDelete(bus.busId, bus.busNumber)} className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50">Delete</button>
