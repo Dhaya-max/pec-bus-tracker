@@ -224,11 +224,12 @@ export default function StudentDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-[#1E3A5F] dark:text-blue-400 text-sm sm:text-base">{bus.busNumber}</h3>
-                        <button
-  onClick={() => togglePreferred(bus.busId)}
-  className="text-lg leading-none"
-  title={preferredBusId === bus.busId ? 'Remove from My Bus' : 'Set as My Bus'}
+                       <button
+  onClick={(e) => { e.stopPropagation(); togglePreferred(bus.busId) }}
+  className="text-base leading-none"
 >
+  title={preferredBusId === bus.busId ? 'Remove from My Bus' : 'Set as My Bus'}
+
   {preferredBusId === bus.busId ? '⭐' : '☆'}
 </button>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[bus.status]}`}>
