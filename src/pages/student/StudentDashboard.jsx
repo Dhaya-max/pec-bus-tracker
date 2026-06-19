@@ -217,7 +217,7 @@ export default function StudentDashboard() {
               <div className="text-center text-gray-400 py-10">No buses found.</div>
             )}
             {filtered.map(bus => (
-              <div key={bus.busId} className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-sm">
+            <div key={bus.busId} className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedBus(bus)}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <img src="/pnm.jpg" alt="bus" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover flex-shrink-0" />
@@ -228,7 +228,7 @@ export default function StudentDashboard() {
   onClick={(e) => { e.stopPropagation(); togglePreferred(bus.busId) }}
   className="text-base leading-none"
 >
-  title={preferredBusId === bus.busId ? 'Remove from My Bus' : 'Set as My Bus'}
+ 
 
   {preferredBusId === bus.busId ? '⭐' : '☆'}
 </button>
