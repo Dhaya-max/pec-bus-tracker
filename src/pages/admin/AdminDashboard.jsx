@@ -235,7 +235,7 @@ export default function AdminDashboard() {
   b.driver?.toLowerCase().includes(busSearch.toLowerCase())).map(bus => (
                         <tr key={bus.busId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="py-3 font-medium text-[#1E3A5F] dark:text-blue-400">{bus.busNumber}</td>
-                        <button onClick={() => handleDelete(bus.busId, bus.busNumber)} className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50">Delete</button>
+            
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.route}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.driver}</td>
                           <td className="py-3 text-gray-600 dark:text-gray-300">{bus.capacity}</td>
