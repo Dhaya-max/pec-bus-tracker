@@ -1,0 +1,22 @@
+{
+  "name": "PEC Bus Tracker",
+  "short_name": "Bus Tracker",
+  "description": "Real-time bus tracking for Panimalar Engineering College",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFF6FF",
+  "theme_color": "#1E3A5F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pnm.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/pnm.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
