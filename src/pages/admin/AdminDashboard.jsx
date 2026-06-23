@@ -359,50 +359,87 @@ const [usersLoading, setUsersLoading] = useState(false)
       </div>
 {tab === 'users' && (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
-    <h2 className="font-bold text-[#1E3A5F] dark:text-blue-400 text-base sm:text-lg mb-4">👥 User Management</h2>
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="font-bold text-[#1E3A5F] dark:text-blue-400 text-base sm:text-lg">👥 User Management</h2>
+      <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+        {users.length} total users
+      </span>
+    </div>
+
     {usersLoading ? (
-      <div className="text-center text-gray-400 py-10">Loading users...</div>
-    ) : (
       <div className="space-y-3">
-        {['admin', 'driver', 'student'].map(role => (
-          <div key={role}>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-3">
-              {role}s ({users.filter(u => u.role === role).length})
-            </p>
-            {users.filter(u => u.role === role).map(user => (
-              <div key={user._id} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-xl mb-2">
-                <div>
-                  <p className="font-medium text-[#1E3A5F] dark:text-blue-400 text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium
-                    ${role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                      role === 'driver' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'}`}>
-                    {role}
-                  </span>
-                  {role !== 'admin' && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await axios.delete(`${API}/api/auth/users/delete/${user._id}`, { headers })
-                          setUsers(prev => prev.filter(u => u._id !== user._id))
-                          showToast(`${user.name} deleted`, 'info')
-                        } catch {
-                          showToast('Failed to delete user', 'error')
-                        }
-                      }}
-                      className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="animate-pulse flex items-center justify-between p-4 border border-gray-100 dark:border-gray-700 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
+              <div className="space-y-2">
+                <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
               </div>
-            ))}
+            </div>
           </div>
         ))}
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {['admin', 'driver', 'student'].map(role => {
+          const roleUsers = users.filter(u => u.role === role)
+          if (roleUsers.length === 0) return null
+          const roleConfig = {
+            admin: { color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300', icon: '👑', border: 'border-purple-200 dark:border-purple-800' },
+            driver: { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', icon: '🚌', border: 'border-blue-200 dark:border-blue-800' },
+            student: { color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: '🎓', border: 'border-green-200 dark:border-green-800' },
+          }
+          const config = roleConfig[role]
+          return (
+            <div key={role}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">{config.icon}</span>
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 capitalize">{role}s</h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.color}`}>
+                  {roleUsers.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {roleUsers.map(user => (
+                  <div key={user._id} className={`flex items-center justify-between p-3 sm:p-4 border rounded-xl transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${config.border}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ${config.color}`}>
+                        {user.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-[#1E3A5F] dark:text-blue-400 text-sm truncate">{user.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      <span className={`hidden sm:block text-xs px-2 py-1 rounded-full font-medium ${config.color}`}>
+                        {role}
+                      </span>
+                      {role !== 'admin' && (
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm(`Delete ${user.name}?`)) return
+                            try {
+                              await axios.delete(`${API}/api/auth/users/delete/${user._id}`, { headers })
+                              setUsers(prev => prev.filter(u => u._id !== user._id))
+                              showToast(`${user.name} deleted`, 'info')
+                            } catch {
+                              showToast('Failed to delete user', 'error')
+                            }
+                          }}
+                          className="text-xs text-red-600 border border-red-300 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors whitespace-nowrap"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
     )}
   </div>
