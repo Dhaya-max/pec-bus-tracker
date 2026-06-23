@@ -25,6 +25,7 @@ export default function StudentDashboard() {
   const { dark, toggleDark } = useTheme()
   const [preferredBusId, setPreferredBusId] = useState(localStorage.getItem('preferredBusId') || null)
   const [selectedBus, setSelectedBus] = useState(null)
+  const [sort, setSort] = useState('default')
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -102,7 +103,18 @@ export default function StudentDashboard() {
       b.status === filter
     return matchSearch && matchFilter
   })
-  .sort((a, b) => a.busId === preferredBusId ? -1 : b.busId === preferredBusId ? 1 : 0)
+ .sort((a, b) => {
+  if (a.busId === preferredBusId) return -1
+  if (b.busId === preferredBusId) return 1
+  if (sort === 'eta') {
+    const etaA = parseInt(a.eta) || 999
+    const etaB = parseInt(b.eta) || 999
+    return etaA - etaB
+  }
+  if (sort === 'route') return a.route.localeCompare(b.route)
+  if (sort === 'status') return a.status.localeCompare(b.status)
+  return 0
+})
 
   const counts = {
     total: buses.length,
@@ -193,7 +205,26 @@ export default function StudentDashboard() {
             className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
           />
        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Sort:</span>
+  {[
+    { value: 'default', label: 'Default' },
+    { value: 'eta', label: '⏱ ETA' },
+    { value: 'route', label: '🗺 Route' },
+    { value: 'status', label: '🚦 Status' },
+  ].map(s => (
+    <button
+      key={s.value}
+      onClick={() => setSort(s.value)}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0
+        ${sort === s.value ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
+    >
+      {s.label}
+    </button>
+  ))}
+</div>
   {['All', 'My Bus', 'On Time', 'Delayed', 'Breakdown'].map(f => (
+    
     <button
       key={f}
       onClick={() => setFilter(f)}
