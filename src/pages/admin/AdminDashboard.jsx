@@ -22,9 +22,19 @@ export default function AdminDashboard() {
   const { dark, toggleDark } = useTheme()
   const { toast, showToast, hideToast } = useToast()
   const [busSearch, setBusSearch] = useState('')
+  const [users, setUsers] = useState([])
+const [usersLoading, setUsersLoading] = useState(false)
 
   const API = 'https://pec-bus-tracker-server-production.up.railway.app'
   const headers = { Authorization: `Bearer ${token}` }
+  useEffect(() => {
+  if (tab !== 'users') return
+  setUsersLoading(true)
+  axios.get(`${API}/api/auth/users`, { headers })
+    .then(res => setUsers(res.data))
+    .catch(err => console.error(err))
+    .finally(() => setUsersLoading(false))
+}, [tab])
 
   useEffect(() => {
     const fetchBuses = async () => {
@@ -147,14 +157,14 @@ export default function AdminDashboard() {
 
         {/* Tabs - scrollable on mobile */}
         <div className="flex gap-2 mb-4 sm:mb-5 overflow-x-auto pb-1">
-          {['buses', 'routes', 'schedule', 'map'].map(t => (
+          {['buses', 'routes', 'schedule', 'map', 'users'].map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0
                 ${tab === t ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
             >
-              {t === 'map' ? '📍 Live Map' : t}
+             {t === 'map' ? '📍 Live Map' : t === 'users' ? '👥 Users' : t}
             </button>
           ))}
         </div>
@@ -347,7 +357,56 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-
+{tab === 'users' && (
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
+    <h2 className="font-bold text-[#1E3A5F] dark:text-blue-400 text-base sm:text-lg mb-4">👥 User Management</h2>
+    {usersLoading ? (
+      <div className="text-center text-gray-400 py-10">Loading users...</div>
+    ) : (
+      <div className="space-y-3">
+        {['admin', 'driver', 'student'].map(role => (
+          <div key={role}>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-3">
+              {role}s ({users.filter(u => u.role === role).length})
+            </p>
+            {users.filter(u => u.role === role).map(user => (
+              <div key={user._id} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-xl mb-2">
+                <div>
+                  <p className="font-medium text-[#1E3A5F] dark:text-blue-400 text-sm">{user.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium
+                    ${role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                      role === 'driver' ? 'bg-blue-100 text-blue-800' :
+                      'bg-green-100 text-green-800'}`}>
+                    {role}
+                  </span>
+                  {role !== 'admin' && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await axios.delete(`${API}/api/auth/users/delete/${user._id}`, { headers })
+                          setUsers(prev => prev.filter(u => u._id !== user._id))
+                          showToast(`${user.name} deleted`, 'info')
+                        } catch {
+                          showToast('Failed to delete user', 'error')
+                        }
+                      }}
+                      className="text-xs text-red-600 border border-red-300 px-2 py-1 rounded hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
       {/* Edit Modal */}
       {editBus && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
