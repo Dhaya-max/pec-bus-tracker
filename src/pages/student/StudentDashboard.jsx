@@ -196,47 +196,45 @@ export default function StudentDashboard() {
         </div>
 
         {/* Search & Filter */}
-        <div className="flex flex-col gap-2 mb-4 sm:mb-5">
-          <input
-            type="text"
-            placeholder="Search by bus number, route or stop..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
-          />
-       <div className="flex gap-2 overflow-x-auto pb-1">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Sort:</span>
-  {[
-    { value: 'default', label: 'Default' },
-    { value: 'eta', label: '⏱ ETA' },
-    { value: 'route', label: '🗺 Route' },
-    { value: 'status', label: '🚦 Status' },
-  ].map(s => (
-    <button
-      key={s.value}
-      onClick={() => setSort(s.value)}
-      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0
-        ${sort === s.value ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
-    >
-      {s.label}
-    </button>
-  ))}
+       <div className="flex flex-col gap-2 mb-4 sm:mb-5">
+  <input
+    type="text"
+    placeholder="Search by bus number, route or stop..."
+    value={search}
+    onChange={e => setSearch(e.target.value)}
+    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+  />
+  <div className="flex gap-2 overflow-x-auto pb-1">
+    {['All', 'My Bus', 'On Time', 'Delayed', 'Breakdown'].map(f => (
+      <button
+        key={f}
+        onClick={() => setFilter(f)}
+        className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0
+          ${filter === f ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
+      >
+        {f === 'My Bus' ? '⭐ My Bus' : f}
+      </button>
+    ))}
+  </div>
+  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Sort:</span>
+    {[
+      { value: 'default', label: 'Default' },
+      { value: 'eta', label: '⏱ ETA' },
+      { value: 'route', label: '🗺 Route' },
+      { value: 'status', label: '🚦 Status' },
+    ].map(s => (
+      <button
+        key={s.value}
+        onClick={() => setSort(s.value)}
+        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0
+          ${sort === s.value ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
+      >
+        {s.label}
+      </button>
+    ))}
+  </div>
 </div>
-  {['All', 'My Bus', 'On Time', 'Delayed', 'Breakdown'].map(f => (
-    
-    <button
-      key={f}
-      onClick={() => setFilter(f)}
-      className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0
-        ${filter === f ? 'bg-[#1E3A5F] text-white' : 'bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-600 border border-gray-300 dark:border-gray-600'}`}
-    >
-      {f === 'My Bus' ? '⭐ My Bus' : f}
-    </button>
-  ))}
-</div>
-        </div>
-
         {/* Bus List */}
        {loading ? (
   <div className="space-y-3">
