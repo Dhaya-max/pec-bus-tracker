@@ -217,7 +217,6 @@ export default function DriverPanel() {
 </button>
 <button
   onClick={async () => {
-    if (busStatus !== 'Breakdown' && bus?.status !== 'Breakdown') return
     const update = {
       busId: bus.busId,
       busNumber: bus.busNumber,
@@ -240,11 +239,10 @@ export default function DriverPanel() {
       showToast('Failed to clear SOS', 'error')
     }
   }}
- className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+  className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
 >
   <span>✅</span> Clear SOS Alert
 </button>
-
         {/* Bus Info */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">My Bus Info</h2>
