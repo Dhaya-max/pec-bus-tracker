@@ -215,7 +215,7 @@ export default function DriverPanel() {
   <span className="text-2xl">🆘</span>
   SOS — Emergency Breakdown
 </button>
-{busStatus === 'Breakdown' && (
+{(busStatus === 'Breakdown' || bus?.status === 'Breakdown') && (
   <button
     onClick={async () => {
       const update = {
