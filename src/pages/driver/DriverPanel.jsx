@@ -240,11 +240,7 @@ export default function DriverPanel() {
       showToast('Failed to clear SOS', 'error')
     }
   }}
-  className={`w-full py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
-    busStatus === 'Breakdown' || bus?.status === 'Breakdown'
-      ? 'bg-gray-600 text-white hover:bg-gray-700'
-      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-  }`}
+ className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
 >
   <span>✅</span> Clear SOS Alert
 </button>
