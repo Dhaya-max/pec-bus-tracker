@@ -204,45 +204,48 @@ export default function DriverPanel() {
           )}
         </div>
         {/* SOS Button */}
-<button
-  onClick={() => {
-    if (window.confirm('Send SOS alert? This will notify all students of a breakdown.')) {
-      handleSOS()
-    }
-  }}
-  className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
->
-  <span className="text-2xl">🆘</span>
-  SOS — Emergency Breakdown
-</button>
-<button
-  onClick={async () => {
-    const update = {
-      busId: bus.busId,
-      busNumber: bus.busNumber,
-      route: bus.route,
-      currentStop,
-      status: 'On Time',
-      message: '',
-      passengers,
-      updatedAt: new Date().toISOString()
-    }
-    setBusStatus('On Time')
-    setMessage('')
-    if (socket) socket.emit('driver:update', update)
-    try {
-      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      showToast('SOS Alert cleared!', 'success')
-    } catch {
-      showToast('Failed to clear SOS', 'error')
-    }
-  }}
-  className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
->
-  <span>✅</span> Clear SOS Alert
-</button>
+{/* SOS Section */}
+<div className="space-y-2">
+  <button
+    onClick={() => {
+      if (window.confirm('Send SOS alert? This will notify all students of a breakdown.')) {
+        handleSOS()
+      }
+    }}
+    className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
+  >
+    <span className="text-2xl">🆘</span>
+    SOS — Emergency Breakdown
+  </button>
+  <button
+    onClick={async () => {
+      const update = {
+        busId: bus.busId,
+        busNumber: bus.busNumber,
+        route: bus.route,
+        currentStop,
+        status: 'On Time',
+        message: '',
+        passengers,
+        updatedAt: new Date().toISOString()
+      }
+      setBusStatus('On Time')
+      setMessage('')
+      if (socket) socket.emit('driver:update', update)
+      try {
+        await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        showToast('SOS Alert cleared!', 'success')
+      } catch {
+        showToast('Failed to clear SOS', 'error')
+      }
+    }}
+    className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+  >
+    <span>✅</span> Clear SOS Alert
+  </button>
+</div>
         {/* Bus Info */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
           <h2 className="text-[#1E3A5F] dark:text-blue-400 font-bold text-base sm:text-lg mb-3">My Bus Info</h2>
