@@ -40,6 +40,7 @@ export default function DriverPanel() {
         setCurrentStop(res.data.currentStop)
         setBusStatus(res.data.status)
         setPassengers(res.data.passengers || 0)
+        setMessage(res.data.message || '')
       } catch (err) {
         console.error('No bus assigned', err)
       } finally {
