@@ -215,36 +215,39 @@ export default function DriverPanel() {
   <span className="text-2xl">🆘</span>
   SOS — Emergency Breakdown
 </button>
-{true(
-  <button
-    onClick={async () => {
-      const update = {
-        busId: bus.busId,
-        busNumber: bus.busNumber,
-        route: bus.route,
-        currentStop,
-        status: 'On Time',
-        message: '',
-        passengers,
-        updatedAt: new Date().toISOString()
-      }
-      setBusStatus('On Time')
-      setMessage('')
-      if (socket) socket.emit('driver:update', update)
-      try {
-        await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        showToast('SOS Alert cleared!', 'success')
-      } catch {
-        showToast('Failed to clear SOS', 'error')
-      }
-    }}
-    className="w-full bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
-  >
-    <span>✅</span> Clear SOS Alert
-  </button>
-)}
+<button
+  onClick={async () => {
+    if (busStatus !== 'Breakdown' && bus?.status !== 'Breakdown') return
+    const update = {
+      busId: bus.busId,
+      busNumber: bus.busNumber,
+      route: bus.route,
+      currentStop,
+      status: 'On Time',
+      message: '',
+      passengers,
+      updatedAt: new Date().toISOString()
+    }
+    setBusStatus('On Time')
+    setMessage('')
+    if (socket) socket.emit('driver:update', update)
+    try {
+      await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      showToast('SOS Alert cleared!', 'success')
+    } catch {
+      showToast('Failed to clear SOS', 'error')
+    }
+  }}
+  className={`w-full py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+    busStatus === 'Breakdown' || bus?.status === 'Breakdown'
+      ? 'bg-gray-600 text-white hover:bg-gray-700'
+      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+  }`}
+>
+  <span>✅</span> Clear SOS Alert
+</button>
 
         {/* Bus Info */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5">
