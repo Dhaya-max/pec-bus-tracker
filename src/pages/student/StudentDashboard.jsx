@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import axios from 'axios'
 import BusMap from '../../components/BusMap'
 import SkeletonCard from '../../components/SkeletonCard'
+import { useState, useEffect, useRef } from 'react'
 
 
 
@@ -27,6 +28,11 @@ export default function StudentDashboard() {
   const [selectedBus, setSelectedBus] = useState(null)
   const [sort, setSort] = useState('default')
   const [sosAlert, setSosAlert] = useState(null)
+  const sosAlertRef = useRef(null)
+const updateSosAlert = (val) => {
+  sosAlertRef.current = val
+  setSosAlert(val)
+}
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
@@ -67,9 +73,9 @@ setSosAlert(sos || null)
       setBuses(prev => prev.map(b => {
         if (b.busNumber === data.busNumber) {
           if (data.status === 'Breakdown' && data.message?.includes('🆘')) {
-  setSosAlert(data)
-} else if (data.busNumber === sosAlert?.busNumber) {
-  setSosAlert(null)
+  updateSosAlert(data)
+} else if (data.busNumber === sosAlertRef.current?.busNumber) {
+  updateSosAlert(null)
 }
           if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
             if (Notification.permission === 'granted') {
