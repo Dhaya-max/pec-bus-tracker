@@ -26,7 +26,7 @@ export default function StudentDashboard() {
   const [preferredBusId, setPreferredBusId] = useState(localStorage.getItem('preferredBusId') || null)
   const [selectedBus, setSelectedBus] = useState(null)
   const [sort, setSort] = useState('default')
-
+  const [sosAlert, setSosAlert] = useState(null)
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
@@ -50,6 +50,8 @@ export default function StudentDashboard() {
           headers: { Authorization: `Bearer ${token}` }
         })
         setBuses(res.data)
+        const sos = res.data.find(b => b.status === 'Breakdown' && b.message?.includes('🆘'))
+setSosAlert(sos || null)
       } catch (err) {
         console.error('Failed to fetch buses', err)
       } finally {
@@ -64,6 +66,11 @@ export default function StudentDashboard() {
     socket.on('bus:updated', (data) => {
       setBuses(prev => prev.map(b => {
         if (b.busNumber === data.busNumber) {
+          if (data.status === 'Breakdown' && data.message?.includes('🆘')) {
+  setSosAlert(data)
+} else if (data.busNumber === sosAlert?.busNumber) {
+  setSosAlert(null)
+}
           if (data.status !== b.status && (data.status === 'Delayed' || data.status === 'Breakdown')) {
             if (Notification.permission === 'granted') {
             navigator.serviceWorker.ready.then(reg => {
@@ -171,13 +178,13 @@ export default function StudentDashboard() {
             </div>
           ))}
         </div>
-        {buses.some(b => b.status === 'Breakdown' && b.message?.includes('🆘')) && (
+ {sosAlert && (
   <div className="bg-red-600 text-white rounded-xl p-4 mb-4 flex items-center gap-3 animate-pulse">
     <span className="text-2xl">🆘</span>
     <div>
       <p className="font-bold">Emergency Alert!</p>
       <p className="text-sm opacity-90">
-        {buses.find(b => b.status === 'Breakdown' && b.message?.includes('🆘'))?.busNumber} — {buses.find(b => b.status === 'Breakdown' && b.message?.includes('🆘'))?.message}
+        {sosAlert.busNumber} — {sosAlert.message}
       </p>
     </div>
   </div>
