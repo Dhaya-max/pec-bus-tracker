@@ -122,19 +122,21 @@ export default function DriverPanel() {
     setSharing(false)
     setLocationStatus('Location sharing stopped.')
   }
-  const handleSOS = async () => {
+ const handleSOS = async () => {
   if (!bus) return
+  const sosMessage = '🆘 Emergency! Bus has broken down. Please arrange alternate transport.'
   const update = {
     busId: bus.busId,
     busNumber: bus.busNumber,
     route: bus.route,
     currentStop,
     status: 'Breakdown',
-    message: '🆘 Emergency! Bus has broken down. Please arrange alternate transport.',
+    message: sosMessage,
     passengers,
     updatedAt: new Date().toISOString()
   }
   setBusStatus('Breakdown')
+  setMessage(sosMessage)
   if (socket) socket.emit('driver:update', update)
   try {
     await axios.post('https://pec-bus-tracker-server-production.up.railway.app/api/bus/status', update, {
